@@ -166,6 +166,13 @@ namespace DeluxeJournal.Framework
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
+            var toRemove = Game1.onScreenMenus.OfType<IOverlay>().ToList();
+            foreach (var overlay in toRemove)
+            {
+                Game1.onScreenMenus.Remove(overlay);
+            }
+            DisposeOverlays(Context.ScreenId);
+
             ToggleVisible = false;
 
             foreach (string key in PageRegistry.Keys)

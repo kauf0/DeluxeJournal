@@ -191,7 +191,7 @@ namespace DeluxeJournal.Framework
                 if (PageRegistry.CreateOverlay(key, settings) is IOverlay overlay)
                 {
                     Settings.TryAdd(key, settings);
-                    _overlays.Value.Add(key, overlay);
+                    _overlays.Value.TryAdd(key, overlay);
                     Game1.onScreenMenus.Add(overlay);
 
                     if (overlay.IsVisible && !overlay.IsVisibilityLocked)

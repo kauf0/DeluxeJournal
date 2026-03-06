@@ -87,6 +87,7 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Load the task list from save data.</summary>
         public void Load()
         {
+            _data = null;
             long umid;
 
             // Each TaskList must be cleared in order to unsubscribe from task events

@@ -17,6 +17,7 @@ using DeluxeJournal.Menus.Components;
 using DeluxeJournal.Patching;
 using DeluxeJournal.Task;
 using DeluxeJournal.Task.Tasks;
+using QuickSave.API;
 
 namespace DeluxeJournal
 {
@@ -240,6 +241,16 @@ namespace DeluxeJournal
             if (Context.IsMainPlayer)
             {
                 LoadColorSchemas(string.IsNullOrEmpty(Config?.TargetColorSchemaFile) ? null : $"{ColorDataPath}/{Config.TargetColorSchemaFile}");
+            }
+
+            if (Helper.ModRegistry.IsLoaded("DLX.QuickSave"))
+            {
+                var quickSaveApi = Helper.ModRegistry.GetApi<IQuickSaveAPI>("DLX.QuickSave");
+                if (quickSaveApi != null)
+                {
+                    quickSaveApi.SavingEvent += (sender, e) => TaskManager?.Save();
+                    quickSaveApi.LoadedEvent += (sender, e) => TaskManager?.Load();
+                }
             }
         }
 

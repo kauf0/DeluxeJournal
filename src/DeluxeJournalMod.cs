@@ -93,6 +93,8 @@ namespace DeluxeJournal
             TaskManager = new TaskManager(EventManager, helper.Data, Config, ModManifest.Version);
             OverlayManager = new OverlayManager(helper.Events, helper.Data, Config);
 
+            new Framework.Integrations.QuestJournalIntegration(helper, Monitor, ModManifest.UniqueID).Register();
+
             PageRegistry.Register("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), null, 999);
             PageRegistry.Register("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), (bounds) => new TasksOverlay(bounds, helper.Input), 998);
             PageRegistry.Register("notes", (bounds) => new NotesPage("notes", bounds, UiTexture, helper.Translation, GetNotes()), (bounds) => new NotesOverlay(bounds, GetNotes()), 997);

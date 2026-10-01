@@ -11,6 +11,7 @@ using StardewValley.Menus;
 using DeluxeJournal.Framework;
 using DeluxeJournal.Framework.Data;
 using DeluxeJournal.Framework.Events;
+using DeluxeJournal.Framework.Integrations;
 using DeluxeJournal.Framework.Task;
 using DeluxeJournal.Menus;
 using DeluxeJournal.Menus.Components;
@@ -93,7 +94,7 @@ namespace DeluxeJournal
             TaskManager = new TaskManager(EventManager, helper.Data, Config, ModManifest.Version);
             OverlayManager = new OverlayManager(helper.Events, helper.Data, Config);
 
-            new Framework.Integrations.QuestJournalIntegration(helper, Monitor, ModManifest.UniqueID).Register();
+            new QuestJournalIntegration(helper, Monitor, ModManifest.UniqueID).Register();
 
             PageRegistry.Register("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), null, 999);
             PageRegistry.Register("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), (bounds) => new TasksOverlay(bounds, helper.Input), 998);

@@ -1,6 +1,5 @@
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewValley;
 using DeluxeJournal.Task;
 
 namespace DeluxeJournal.Framework.Integrations
@@ -25,6 +24,7 @@ namespace DeluxeJournal.Framework.Integrations
             _ownerId = ownerId;
         }
 
+        /// <summary>Connect to Quest Journal once all mods are loaded.</summary>
         public void Register()
         {
             _helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -33,8 +33,11 @@ namespace DeluxeJournal.Framework.Integrations
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
             _api = _helper.ModRegistry.GetApi<IQuestJournalApi>(QuestJournalId);
+
             if (_api == null)
+            {
                 return;
+            }
 
             _monitor.Log("RafiaBee.QuestJournal found. Deluxe Journal tasks will show up in its journal too.", LogLevel.Info);
 
@@ -50,8 +53,12 @@ namespace DeluxeJournal.Framework.Integrations
 
         private void Resync()
         {
-            if (_api == null)
+            // Quest Journal keeps one set of entries for all screens, so only the first screen's player is mirrored.
+            if (_api == null || Context.ScreenId != 0)
+            {
                 return;
+            }
+
             _api.ClearEntries(_ownerId);
             _lastKeys.Clear();
             Sync();
@@ -59,23 +66,32 @@ namespace DeluxeJournal.Framework.Integrations
 
         private void Sync()
         {
-            if (_api == null || !Context.IsWorldReady)
+            if (_api == null || !Context.IsWorldReady || Context.ScreenId != 0)
+            {
                 return;
+            }
 
-            var tasks = DeluxeJournalMod.TaskManager?.Tasks;
+            IList<ITask>? tasks = DeluxeJournalMod.TaskManager?.Tasks;
+
             if (tasks == null)
+            {
                 return;
+            }
 
-            var current = new HashSet<string>();
-            var nameCounts = new Dictionary<string, int>();
+            HashSet<string> current = new();
+            Dictionary<string, int> nameCounts = new();
 
             foreach (ITask task in tasks)
             {
                 if (task.IsHeader || !task.Active)
+                {
                     continue;
+                }
 
                 if (task.Complete && task.RenewPeriod == ITask.Period.Never)
+                {
                     continue;
+                }
 
                 string name = string.IsNullOrWhiteSpace(task.Name) ? "(unnamed)" : task.Name.Trim();
                 int seen = nameCounts.TryGetValue(name, out int c) ? c : 0;
@@ -87,24 +103,28 @@ namespace DeluxeJournal.Framework.Integrations
             }
 
             foreach (string stale in _lastKeys)
+            {
                 if (!current.Contains(stale))
+                {
                     _api.RemoveEntry(_ownerId, stale);
+                }
+            }
 
             _lastKeys.Clear();
             _lastKeys.UnionWith(current);
         }
-        private const string BannerLabel = "Deluxe Journal Task";
 
         private JournalEntry BuildEntry(ITask task, string key)
         {
             bool showProgress = task.ShouldShowProgress() && task.MaxCount > 0;
             string name = task.Name ?? string.Empty;
+
             return new JournalEntry
             {
                 OwnerId = _ownerId,
                 Key = key,
                 Title = name,
-                BannerTitle = BannerLabel,
+                BannerTitle = _helper.Translation.Get("questjournal.banner"),
                 Description = ResolveRepeat(task),
                 Objective = showProgress ? $"{name} {task.Count}/{task.MaxCount}" : name,
                 Source = "Deluxe Journal",
@@ -120,10 +140,14 @@ namespace DeluxeJournal.Framework.Integrations
         private string ResolveRepeat(ITask task)
         {
             ITask.Period period = task.RenewPeriod;
+
             if (period == ITask.Period.Never)
+            {
                 return string.Empty;
+            }
 
             string label;
+
             if (period == ITask.Period.Custom)
             {
                 int days = task.RenewCustomInterval;
@@ -135,20 +159,28 @@ namespace DeluxeJournal.Framework.Integrations
                 label = _helper.Translation.Get($"ui.tasks.options.renew.{period}");
             }
 
-            return $"Repeats: {label}";
+            return _helper.Translation.Get("questjournal.repeats", new { period = label });
         }
 
         private void CompleteTask(ITask task)
         {
             if (task.Complete)
+            {
                 return;
+            }
+
             task.Complete = true;
             Sync();
         }
 
         private void CancelTask(ITask task)
         {
-            DeluxeJournalMod.TaskManager?.Tasks.Remove(task);
+            // Removing a task that is not in the list would still unsubscribe it from its events.
+            if (DeluxeJournalMod.TaskManager?.Tasks is IList<ITask> tasks && tasks.Contains(task))
+            {
+                tasks.Remove(task);
+            }
+
             Sync();
         }
     }

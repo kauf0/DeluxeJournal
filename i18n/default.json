@@ -75,6 +75,10 @@
 	"ui.overlays.backgroundcolor": "Background Color",
 	"ui.overlays.hotkey": "Hotkey: {{keybind}}",
 
+	// quest journal integration
+	"questjournal.banner": "Deluxe Journal Task",
+	"questjournal.repeats": "Repeats: {{period}}",
+
 	// +---------------------------------+
 	// | display name aliases (OPTIONAL) |
 	// +---------------------------------+

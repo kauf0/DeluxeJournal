@@ -91,7 +91,7 @@ namespace DeluxeJournal
             NotesData = helper.Data.ReadGlobalData<NotesData>(NotesDataKey) ?? new NotesData();
 
             EventManager = new EventManager(helper.Events, helper.Multiplayer, Monitor);
-            TaskManager = new TaskManager(EventManager, helper.Data, Config, ModManifest.Version);
+            TaskManager = new TaskManager(EventManager, helper.Data, helper.Multiplayer, Config, ModManifest.Version);
             OverlayManager = new OverlayManager(helper.Events, helper.Data, Config);
 
             new QuestJournalIntegration(helper, Monitor, ModManifest.UniqueID).Register();

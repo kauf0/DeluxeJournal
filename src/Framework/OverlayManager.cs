@@ -32,7 +32,7 @@ namespace DeluxeJournal.Framework
             {
                 _toggleKeybind.Value = value;
 
-                if (Context.IsMainPlayer)
+                if (Context.ScreenId == 0)
                 {
                     _config.ToggleOverlaysKeybind = value;
                 }
@@ -75,7 +75,7 @@ namespace DeluxeJournal.Framework
         {
             IOverlay.BackgroundColor = color;
 
-            if (Context.IsMainPlayer)
+            if (Context.ScreenId == 0)
             {
                 _config.OverlayBackgroundColor = ColorSchema.ColorToHex(color, true);
                 _config.Save();
@@ -100,7 +100,7 @@ namespace DeluxeJournal.Framework
         {
             UpdateSettings();
 
-            if (Context.IsMainPlayer)
+            if (Context.ScreenId == 0)
             {
                 _dataHelper.WriteGlobalData(OverlaySettingsKey, _settings.Value);
             }
@@ -222,7 +222,7 @@ namespace DeluxeJournal.Framework
 
         private Dictionary<string, OverlaySettings> GetOrCreateSettings()
         {
-            if (!Context.IsMainPlayer)
+            if (Context.ScreenId != 0)
             {
                 Dictionary<string, OverlaySettings> settings = new(2);
 

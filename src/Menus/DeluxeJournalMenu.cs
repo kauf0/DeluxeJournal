@@ -328,7 +328,11 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
+                if (!Game1.options.showClearBackgrounds)
+                {
+                    b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
+                }
+
                 drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 373, 18, 18), xPositionOnScreen, yPositionOnScreen, width, height, Color.White, 4f);
                 SpriteText.drawStringWithScrollCenteredAt(b, _tabs[ActiveTab].hoverText, xPositionOnScreen + width / 2, yPositionOnScreen - 64);
 

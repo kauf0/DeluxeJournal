@@ -120,7 +120,7 @@ namespace DeluxeJournal.Util
         /// <param name="toolData">The tool data.</param>
         public static bool IsTrashCan(ToolData toolData)
         {
-            return toolData.ClassName == nameof(GenericTool) && (toolData.SpriteIndex >= 13 || toolData.SpriteIndex <= 16);
+            return toolData.ClassName == nameof(GenericTool) && toolData.SpriteIndex >= 13 && toolData.SpriteIndex <= 16;
         }
 
         /// <summary>

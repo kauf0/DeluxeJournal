@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using DeluxeJournal.Util;
 
@@ -19,8 +18,6 @@ namespace DeluxeJournal.Menus
 
         private readonly FieldInfo _currentPageField;
         private readonly FieldInfo _questPageField;
-        private readonly Rectangle _eraseScrollRect;
-        private readonly string _titlePlaceholder;
 
         private QuestLog? _questLog;
 
@@ -59,15 +56,6 @@ namespace DeluxeJournal.Menus
         {
             _currentPageField = ReflectionHelper.TryGetField<QuestLog>("currentPage", BindingFlags.Instance | BindingFlags.NonPublic);
             _questPageField = ReflectionHelper.TryGetField<QuestLog>("questPage", BindingFlags.Instance | BindingFlags.NonPublic);
-            _titlePlaceholder = Game1.content.LoadString("Strings\\StringsFromCSFiles:QuestLog.cs.11373");
-
-            if (Game1.dialogueFont.MeasureString(title).X > Game1.dialogueFont.MeasureString(_titlePlaceholder).X)
-            {
-                _titlePlaceholder = title;
-            }
-
-            int scrollWidth = SpriteText.getWidthOfString(_titlePlaceholder) + 96;
-            _eraseScrollRect = new Rectangle(xPositionOnScreen + (width - scrollWidth - 8) / 2, yPositionOnScreen - 72, scrollWidth, 72);
 
             _backButton = new ClickableTextureComponent(
                 new Rectangle(xPositionOnScreen - 128, yPositionOnScreen + 8, 48, 44),
@@ -201,14 +189,6 @@ namespace DeluxeJournal.Menus
         public override void draw(SpriteBatch b)
         {
             QuestLog?.draw(b);
-
-            b.End();
-            b.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
-            b.Draw(Game1.fadeToBlackRect, _eraseScrollRect, Color.Black * 0.75f);
-
-            b.End();
-            b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-            SpriteText.drawStringWithScrollCenteredAt(b, Title, xPositionOnScreen + width / 2, yPositionOnScreen - 64, _titlePlaceholder);
         }
     }
 }

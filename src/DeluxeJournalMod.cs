@@ -252,7 +252,6 @@ namespace DeluxeJournal
                 if (quickSaveApi != null)
                 {
                     quickSaveApi.SavingEvent += (sender, e) => TaskManager?.Save();
-                    quickSaveApi.LoadedEvent += (sender, e) => TaskManager?.Load();
                 }
             }
         }

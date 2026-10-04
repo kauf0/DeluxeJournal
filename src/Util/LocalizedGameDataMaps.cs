@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData;
 using StardewValley.GameData.BigCraftables;
 using StardewValley.GameData.Buildings;
 using StardewValley.GameData.Characters;
@@ -26,6 +27,9 @@ namespace DeluxeJournal.Util
 
         /// <inheritdoc cref="LocalizedFarmAnimalMap"/>
         public LocalizedGameDataMap LocalizedFarmAnimals { get; } = new LocalizedFarmAnimalMap(translation, settings, monitor);
+
+        /// <inheritdoc cref="LocalizedMonsterMap"/>
+        public LocalizedGameDataMap LocalizedMonsters { get; } = new LocalizedMonsterMap(translation, settings, monitor);
 
         public LocalizedGameDataMaps(ITranslationHelper translation, IMonitor? monitor = null)
             : this(translation, new(), monitor)
@@ -293,6 +297,34 @@ namespace DeluxeJournal.Util
                             }
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Maps localized monster names to their internal names, and the Adventurer's Guild monster eradication
+        /// goal names to the internal names of their target monsters.
+        /// </summary>
+        private class LocalizedMonsterMap(ITranslationHelper translation, TaskParserSettings settings, IMonitor? monitor)
+            : LocalizedGameDataMap("alias.monsters.", translation, settings, monitor)
+        {
+            protected override void PopulateDataMap()
+            {
+                // Goals are added first so that plural monster names (e.g. "bats") match the goal of the same name
+                foreach (MonsterSlayerQuestData goal in DataLoader.MonsterSlayerQuests(Game1.content).Values)
+                {
+                    if (goal.Targets != null && TokenParser.ParseText(goal.DisplayName) is string goalName)
+                    {
+                        foreach (string target in goal.Targets)
+                        {
+                            Add(goalName, target);
+                        }
+                    }
+                }
+
+                foreach (KeyValuePair<string, string> pair in DataLoader.Monsters(Game1.content))
+                {
+                    AddPlural(ArgUtility.Get(pair.Value.Split('/'), 14, pair.Key, allowBlank: false), pair.Key);
                 }
             }
         }

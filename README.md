@@ -45,6 +45,7 @@ To help with organization, tasks can be grouped under a *header*. In the options
 **Gift** | Give a villager a gift, and optionally specify an item. | "Give a poppy to Penny"
 **Buy**\*\* | Buy an item from a shop, with an optional count. | "Buy 48 pumpkin seeds"
 **Sell**\*\* | Sell an item to a shop or overnight via the shipping bin, with an optional count. | "Sell 10 tea saplings"
+**Slay Monsters** | Slay a monster, or any of the monsters from an Adventurer's Guild eradication goal, with an optional count. | "Kill 1000 slimes"
 
 \*\* *These tasks provide cost tracking, meaning the total amount to pay/gain after completing the
 task(s) will show up in the money box at the bottom of the tasks page.*

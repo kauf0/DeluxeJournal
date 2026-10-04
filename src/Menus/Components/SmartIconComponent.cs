@@ -30,6 +30,18 @@ namespace DeluxeJournal.Menus.Components
         /// <summary>Size of the source rect to capture the NPC's head.</summary>
         private const int HeadSize = 12;
 
+        /// <summary>
+        /// Slimes are drawn from a grayscale sprite sheet tinted with these colors (as a Big Slime is in each area of the mines).
+        /// Frost Jellies and Sludges have no sprite sheet of their own and use the Green Slime one.
+        /// </summary>
+        private static readonly Dictionary<string, Color> SlimeColors = new()
+        {
+            ["Green Slime"] = Color.Lime,
+            ["Big Slime"] = Color.Lime,
+            ["Frost Jelly"] = Color.Turquoise,
+            ["Sludge"] = Color.Red
+        };
+
         internal static Dictionary<string, int>? AnimalIconIds;
         internal static Dictionary<string, BuildingIconData>? BuildingIconData;
 
@@ -45,6 +57,11 @@ namespace DeluxeJournal.Menus.Components
         private Texture2D? _npcSpriteSheet;
         private Rectangle _npcSourceRect;
         private string _loadedNpcName;
+
+        private Texture2D? _monsterSpriteSheet;
+        private Rectangle _monsterSourceRect;
+        private Color _monsterColor;
+        private string _loadedMonsterName;
 
         public Point Location
         {
@@ -108,6 +125,7 @@ namespace DeluxeJournal.Menus.Components
             _bounds = bounds;
             _visible = true;
             _loadedNpcName = string.Empty;
+            _loadedMonsterName = string.Empty;
 
             if (showType)
             {
@@ -184,6 +202,10 @@ namespace DeluxeJournal.Menus.Components
                     else if (ComparePriority(ref flag, SmartIconFlags.Building, _mask) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Building))
                     {
                         text = _taskParser.BuildingDisplayName;
+                    }
+                    else if (ComparePriority(ref flag, SmartIconFlags.Monster, _mask) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Monster))
+                    {
+                        text = _taskParser.MonsterDisplayName;
                     }
                     else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item))
                     {
@@ -263,6 +285,25 @@ namespace DeluxeJournal.Menus.Components
                             DrawIconBackground(b, targetIcon.bounds, 2, color, shadow);
                         }
                     }
+                    else if (ComparePriority(ref flag, SmartIconFlags.Monster, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Monster))
+                    {
+                        DrawIconBackground(b, targetIcon.bounds, 1, color, shadow);
+
+                        if (LoadMonsterSpriteSheet(_taskParser.Monsters!) is Texture2D texture)
+                        {
+                            Rectangle innerBounds = ConvertInnerBounds(targetIcon.bounds);
+                            float scale = Math.Min((float)innerBounds.Width / _monsterSourceRect.Width, (float)innerBounds.Height / _monsterSourceRect.Height);
+                            int width = (int)(_monsterSourceRect.Width * scale);
+                            int height = (int)(_monsterSourceRect.Height * scale);
+
+                            b.Draw(texture,
+                                new Rectangle(innerBounds.Center.X - width / 2, innerBounds.Bottom - height, width, height),
+                                _monsterSourceRect,
+                                Utility.MultiplyColor(_monsterColor, color));
+                        }
+
+                        DrawDigits(b, parsedCount, targetIcon.bounds, color);
+                    }
                     else if (ComparePriority(ref flag, SmartIconFlags.Item, _mask, true) && _taskParser.ShouldShowSmartIcon(SmartIconFlags.Item) && _taskParser.ProxyItem is Item item)
                     {
                         DrawIconBackground(b, targetIcon.bounds, 1, color, shadow);
@@ -317,6 +358,86 @@ namespace DeluxeJournal.Menus.Components
             }
 
             return _npcSpriteSheet;
+        }
+
+        /// <summary>
+        /// Load and cache the sprite sheet of the first monster that has one, along with the source rect of its
+        /// first frame and the color it is drawn with.
+        /// </summary>
+        /// <param name="monsterNames">Internal names of the monsters.</param>
+        private Texture2D? LoadMonsterSpriteSheet(IEnumerable<string> monsterNames)
+        {
+            string monsterName = monsterNames.FirstOrDefault() ?? string.Empty;
+
+            if (monsterName != _loadedMonsterName)
+            {
+                _monsterSpriteSheet = null;
+
+                foreach (string name in monsterNames)
+                {
+                    string textureName = $"Characters\\Monsters\\{name}";
+
+                    if (!Game1.content.DoesAssetExist<Texture2D>(textureName) && SlimeColors.ContainsKey(name))
+                    {
+                        textureName = "Characters\\Monsters\\Green Slime";
+                    }
+
+                    if (Game1.content.DoesAssetExist<Texture2D>(textureName))
+                    {
+                        _monsterSpriteSheet = Game1.content.Load<Texture2D>(textureName);
+                        _monsterSourceRect = GetMonsterSourceRect(_monsterSpriteSheet);
+                        _monsterColor = SlimeColors.GetValueOrDefault(name, Color.White);
+                        break;
+                    }
+                }
+
+                _loadedMonsterName = monsterName;
+            }
+
+            return _monsterSpriteSheet;
+        }
+
+        /// <summary>Get the source rect around the opaque pixels of the first frame on a monster sprite sheet.</summary>
+        /// <remarks>
+        /// Frame heights vary between monsters, so the frame is assumed to end at the first transparent row
+        /// below the sprite, but no lower than twice the frame width.
+        /// </remarks>
+        /// <param name="texture">The sprite sheet texture. Monster sprite sheets are four frames wide.</param>
+        private static Rectangle GetMonsterSourceRect(Texture2D texture)
+        {
+            int frameWidth = texture.Width / 4;
+            int frameHeight = Math.Min(frameWidth * 2, texture.Height);
+            Color[] pixels = new Color[frameWidth * frameHeight];
+            int left = frameWidth, right = 0, top = -1, bottom = 0;
+
+            texture.GetData(0, new Rectangle(0, 0, frameWidth, frameHeight), pixels, 0, pixels.Length);
+
+            for (int y = 0; y < frameHeight; y++)
+            {
+                bool emptyRow = true;
+
+                for (int x = 0; x < frameWidth; x++)
+                {
+                    if (pixels[y * frameWidth + x].A > 0)
+                    {
+                        left = Math.Min(left, x);
+                        right = Math.Max(right, x);
+                        emptyRow = false;
+                    }
+                }
+
+                if (!emptyRow)
+                {
+                    top = top < 0 ? y : top;
+                    bottom = y;
+                }
+                else if (top >= 0)
+                {
+                    break;
+                }
+            }
+
+            return top < 0 ? new(0, 0, frameWidth, frameWidth) : new(left, top, right - left + 1, bottom - top + 1);
         }
 
         /// <summary>Get the source rect for an NPC portrait icon.</summary>

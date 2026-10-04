@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
 
 namespace DeluxeJournal.Task
 {
@@ -12,10 +13,14 @@ namespace DeluxeJournal.Task
         /// <summary>The icon source rect for the given texture.</summary>
         public Rectangle SourceRect { get; set; }
 
-        public TaskIcon(Texture2D? texture, Rectangle sourceRect)
+        /// <summary>The qualified ID of an item drawn on top of the icon, or null if none.</summary>
+        public string? ItemId { get; set; }
+
+        public TaskIcon(Texture2D? texture, Rectangle sourceRect, string? itemId = null)
         {
             CustomIconTexture = texture;
             SourceRect = sourceRect;
+            ItemId = itemId;
         }
 
         public void DrawIcon(SpriteBatch b, Rectangle bounds, Color color, float scale = 4f, bool drawShadow = false)
@@ -32,6 +37,22 @@ namespace DeluxeJournal.Task
                 else
                 {
                     b.Draw(texture, position, SourceRect, color, 0, origin, scale, SpriteEffects.None, position.Y / 10000f);
+                }
+
+                if (ItemId != null)
+                {
+                    ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(ItemId);
+                    Rectangle itemSourceRect = itemData.GetSourceRect();
+
+                    b.Draw(itemData.GetTexture(),
+                        position,
+                        itemSourceRect,
+                        color,
+                        0,
+                        new Vector2(itemSourceRect.Width / 2, itemSourceRect.Height / 2),
+                        scale * 0.75f,
+                        SpriteEffects.None,
+                        position.Y / 10000f + 0.0001f);
                 }
             }
         }

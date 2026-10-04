@@ -593,6 +593,7 @@ namespace DeluxeJournal.Menus
                             TaskParameterTag.Building => SmartIconFlags.Building,
                             TaskParameterTag.FarmAnimalList => SmartIconFlags.Animal,
                             TaskParameterTag.NpcName => SmartIconFlags.Npc,
+                            TaskParameterTag.MonsterList => SmartIconFlags.Monster,
                             _ => SmartIconFlags.None
                         };
 

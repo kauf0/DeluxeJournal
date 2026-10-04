@@ -112,7 +112,8 @@ namespace DeluxeJournal
                 new CraftingPagePatch(EventManager, Monitor),
                 new CarpenterMenuPatch(EventManager, Monitor),
                 new PurchaseAnimalsMenuPatch(EventManager, Monitor),
-                new ShopMenuPatch(EventManager, Monitor)
+                new ShopMenuPatch(EventManager, Monitor),
+                new StatsPatch(EventManager, Monitor)
             );
 
             ConsoleCommands.AddCommands(helper.ConsoleCommands, Monitor);

@@ -58,6 +58,12 @@ namespace DeluxeJournal.Framework.Events
             remove => EventManager.BuildingConstructed.Remove(value);
         }
 
+        public event EventHandler<MonsterKilledEventArgs> MonsterKilled
+        {
+            add => EventManager.MonsterKilled.Add(value);
+            remove => EventManager.MonsterKilled.Remove(value);
+        }
+
         public IModEvents ModEvents => EventManager.ModEvents;
 
         private EventManager EventManager { get; }

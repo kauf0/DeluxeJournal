@@ -32,6 +32,9 @@ namespace DeluxeJournal.Events
         /// <remarks>Upgrades are currently only detected via a <see cref="CarpenterMenu"/> (i.e. Robin or the Wizard).</remarks>
         event EventHandler<BuildingConstructedEventArgs> BuildingConstructed;
 
+        /// <summary>A monster kill has been credited to the local player, i.e. it counts towards the Adventurer's Guild goals.</summary>
+        event EventHandler<MonsterKilledEventArgs> MonsterKilled;
+
         /// <summary>SMAPI mod events bus.</summary>
         IModEvents ModEvents { get; }
     }

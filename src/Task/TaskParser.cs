@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData;
 using StardewValley.GameData.Tools;
 using StardewValley.TokenizableStrings;
 using DeluxeJournal.Task.Tasks;
@@ -36,12 +37,14 @@ namespace DeluxeJournal.Task
         private int? _count;
         private IEnumerable<string>? _itemIds;
         private IEnumerable<string>? _farmAnimals;
+        private IEnumerable<string>? _monsters;
         private TaskFactory? _factory;
 
         private Item? _cachedItem;
         private string? _cachedNpcDisplayName;
         private string? _cachedBuildingDisplayName;
         private string? _cachedFarmAnimalDisplayName;
+        private string? _cachedMonsterDisplayName;
 
         /// <summary>The ID of the matched task.</summary>
         public string ID => _id;
@@ -229,6 +232,46 @@ namespace DeluxeJournal.Task
             }
         }
 
+        /// <summary>The parsed internal monster names.</summary>
+        public IEnumerable<string>? Monsters
+        {
+            get => _monsters;
+
+            private set
+            {
+                _monsters = value;
+                _cachedMonsterDisplayName = null;
+            }
+        }
+
+        /// <summary>
+        /// Localized monster display name, or the name of the Adventurer's Guild monster eradication goal
+        /// if the parsed monsters are its targets.
+        /// </summary>
+        public string MonsterDisplayName
+        {
+            get
+            {
+                if (_cachedMonsterDisplayName == null && Monsters != null && Monsters.Any())
+                {
+                    if (Monsters.Count() > 1)
+                    {
+                        foreach (MonsterSlayerQuestData goal in DataLoader.MonsterSlayerQuests(Game1.content).Values)
+                        {
+                            if (goal.Targets?.Count == Monsters.Count() && goal.Targets.All(Monsters.Contains))
+                            {
+                                return _cachedMonsterDisplayName = TokenParser.ParseText(goal.DisplayName);
+                            }
+                        }
+                    }
+
+                    _cachedMonsterDisplayName = TokenParser.ParseText(TokenStringBuilder.MonsterName(Monsters.First()));
+                }
+
+                return _cachedMonsterDisplayName ?? string.Empty;
+            }
+        }
+
         /// <summary><see cref="TaskFactory"/> corresponding to the matched task ID.</summary>
         public TaskFactory Factory
         {
@@ -285,6 +328,7 @@ namespace DeluxeJournal.Task
             _count = null;
             ItemIds = null;
             FarmAnimals = null;
+            Monsters = null;
             NpcName = string.Empty;
             BuildingType = string.Empty;
         }
@@ -423,6 +467,15 @@ namespace DeluxeJournal.Task
 
             bool HandleWord(string word)
             {
+                // Matched independently, since monster names can also be item names (e.g. "slimes")
+                bool isMonster = false;
+
+                if (!_settings.IgnoreMonsters && _localizedGameData.LocalizedMonsters.TryGetValues(word, out var monsters))
+                {
+                    Monsters = monsters;
+                    isMonster = true;
+                }
+
                 if (int.TryParse(word.Trim('x'), out int count) && count > 0)
                 {
                     _count = count;
@@ -445,7 +498,7 @@ namespace DeluxeJournal.Task
                 }
                 else
                 {
-                    return false;
+                    return isMonster;
                 }
 
                 return true;
@@ -475,6 +528,10 @@ namespace DeluxeJournal.Task
             else if (tag.Equals(TaskParameterTag.FarmAnimalList) && propertyType == typeof(IList<string>))
             {
                 return FarmAnimals != null && parameter.TrySetValue(FarmAnimals.ToList());
+            }
+            else if (tag.Equals(TaskParameterTag.MonsterList) && propertyType == typeof(IList<string>))
+            {
+                return Monsters != null && parameter.TrySetValue(Monsters.ToList());
             }
             else if (tag.Equals(TaskParameterTag.Count) && propertyType == typeof(int))
             {
@@ -509,6 +566,10 @@ namespace DeluxeJournal.Task
             {
                 FarmAnimals = parameter.Value is IList<string> farmAnimals ? farmAnimals.ToList() : null;
             }
+            else if (tag.Equals(TaskParameterTag.MonsterList))
+            {
+                Monsters = parameter.Value is IList<string> monsters ? monsters.ToList() : null;
+            }
             else if (tag.Equals(TaskParameterTag.Count))
             {
                 _count = parameter.Value is int count ? count : 1;
@@ -541,6 +602,10 @@ namespace DeluxeJournal.Task
             else if (enabled.HasFlag(SmartIconFlags.Animal))
             {
                 return FarmAnimals != null;
+            }
+            else if (enabled.HasFlag(SmartIconFlags.Monster))
+            {
+                return Monsters != null;
             }
             else
             {

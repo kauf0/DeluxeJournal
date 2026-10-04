@@ -10,6 +10,9 @@
         /// <summary>Show the item icon.</summary>
         Item = 1 << 0,
 
+        /// <summary>Show the monster icon.</summary>
+        Monster = 1 << 1,
+
         /// <summary>Show building icon.</summary>
         Building = 1 << 2,
 

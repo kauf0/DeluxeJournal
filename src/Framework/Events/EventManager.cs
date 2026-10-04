@@ -27,6 +27,8 @@ namespace DeluxeJournal.Framework.Events
 
         public BuildingConstructedEvent BuildingConstructed { get; }
 
+        public IManagedEvent<MonsterKilledEventArgs> MonsterKilled { get; }
+
         public IModEvents ModEvents { get; }
 
         public IMonitor Monitor { get; }
@@ -46,6 +48,7 @@ namespace DeluxeJournal.Framework.Events
             FarmAnimalPurchased = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalPurchased));
             FarmAnimalSold = new ManagedEvent<FarmAnimalEventArgs>(nameof(FarmAnimalSold));
             BuildingConstructed = new BuildingConstructedEvent(nameof(BuildingConstructed), multiplayer);
+            MonsterKilled = new ManagedEvent<MonsterKilledEventArgs>(nameof(MonsterKilled));
 
             ModEvents.Multiplayer.ModMessageReceived += OnModMessageReceived;
         }

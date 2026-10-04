@@ -18,6 +18,8 @@
 	"task.header": "Header",
 	"task.sell": "Sell",
 	"task.sell.keywords": "sell,ship",
+	"task.slay": "Slay Monsters",
+	"task.slay.keywords": "slay,kill,defeat,hunt",
 
 	// tab/page names
 	"ui.tab.quests": "Quests",
@@ -67,6 +69,7 @@
 	"ui.tasks.parameter.color": "Color",
 	"ui.tasks.parameter.count": "Count",
 	"ui.tasks.parameter.item": "Item",
+	"ui.tasks.parameter.monster": "Monster",
 	"ui.tasks.parameter.npc": "Villager",
 	"ui.tasks.parameter.quality": "Quality (Minimum)",
 	"ui.tasks.parameter.tool": "Tool",

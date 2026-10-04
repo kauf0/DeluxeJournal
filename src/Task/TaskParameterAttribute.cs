@@ -28,6 +28,9 @@
             /// <summary>Specifies a farm animal type parameter.</summary>
             public const string FarmAnimal = "animal";
 
+            /// <summary>Specifies a monster type parameter.</summary>
+            public const string Monster = "monster";
+
             /// <summary>Specifies a counting type parameter.</summary>
             public const string Count = "count";
 
@@ -58,6 +61,12 @@
 
             /// <summary>A building name of type <see cref="string"/>.</summary>
             Building,
+
+            /// <summary>
+            /// A monster name list of type <see cref="IList{T}"/> with generic type
+            /// <see cref="string"/>.
+            /// </summary>
+            MonsterList,
 
             /// <summary>An item count of type <see cref="int"/>.</summary>
             Count,

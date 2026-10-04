@@ -14,10 +14,16 @@ namespace DeluxeJournal.Task.Tasks
         public static readonly string Gift = Register("gift", typeof(GiftTask), typeof(GiftTask.Factory), 6, 10);
         public static readonly string Buy = Register("buy", typeof(BuyTask), typeof(BuyTask.Factory), 7, 16);
         public static readonly string Sell = Register("sell", typeof(SellTask), typeof(SellTask.Factory), 8, 15);
+        public static readonly string Slay = Register("slay", typeof(SlayTask), typeof(SlayTask.Factory), new TaskIcon(null, new Rectangle(0, 110, 14, 14), "(W)0"), 31);
 
         private static string Register(string id, Type taskType, Type factoryType, int iconTileSheetIndex, int priority)
         {
-            TaskRegistry.Register(id, taskType, factoryType, new TaskIcon(null, new Rectangle(iconTileSheetIndex * 14, 96, 14, 14)), priority);
+            return Register(id, taskType, factoryType, new TaskIcon(null, new Rectangle(iconTileSheetIndex * 14, 96, 14, 14)), priority);
+        }
+
+        private static string Register(string id, Type taskType, Type factoryType, TaskIcon icon, int priority)
+        {
+            TaskRegistry.Register(id, taskType, factoryType, icon, priority);
             return id;
         }
     }

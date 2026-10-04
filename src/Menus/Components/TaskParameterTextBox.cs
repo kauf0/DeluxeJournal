@@ -31,6 +31,7 @@ namespace DeluxeJournal.Menus.Components
                 IgnoreNpcs = !parameter.Attribute.Tag.Equals(TaskParameterTag.NpcName),
                 IgnoreBuildings = !parameter.Attribute.Tag.Equals(TaskParameterTag.Building),
                 IgnoreFarmAnimals = !parameter.Attribute.Tag.Equals(TaskParameterTag.FarmAnimalList),
+                IgnoreMonsters = !parameter.Attribute.Tag.Equals(TaskParameterTag.MonsterList),
                 SetItemCategoryObject = parameter.Attribute.Constraints.HasFlag(Constraint.SObject),
                 SetItemCategoryBigCraftable = parameter.Attribute.HasAnyConstraint(Constraint.SObject ^ Constraint.Craftable),
                 SetItemCategoryCraftable = parameter.Attribute.Constraints.HasFlag(Constraint.Craftable),
@@ -66,6 +67,7 @@ namespace DeluxeJournal.Menus.Components
                 TaskParameterTag.NpcName => Parser.NpcDisplayName,
                 TaskParameterTag.Building => Parser.BuildingDisplayName,
                 TaskParameterTag.FarmAnimalList => Parser.FarmAnimalDisplayName,
+                TaskParameterTag.MonsterList => Parser.MonsterDisplayName,
                 TaskParameterTag.Count => Parser.Count.ToString(),
                 _ => string.Empty
             };

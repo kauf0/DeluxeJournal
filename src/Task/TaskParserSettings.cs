@@ -8,6 +8,7 @@
         private bool? _ignoreNpcs;
         private bool? _ignoreBuildings;
         private bool? _ignoreFarmAnimals;
+        private bool? _ignoreMonsters;
         private bool? _setItemCategoryObject;
         private bool? _setItemCategoryBigCraftable;
         private bool? _setItemCategoryCraftable;
@@ -62,6 +63,16 @@
         {
             get => _ignoreFarmAnimals ?? false;
             set => _ignoreFarmAnimals = value;
+        }
+
+        /// <summary>
+        /// Ignore monster names when parsing.
+        /// The default value is <c>false</c>.
+        /// </summary>
+        public bool IgnoreMonsters
+        {
+            get => _ignoreMonsters ?? false;
+            set => _ignoreMonsters = value;
         }
 
         /// <summary>

@@ -13,6 +13,8 @@ namespace DeluxeJournal.Menus.Components
         private readonly ButtonComponent _visibleCheckBox;
         private readonly ButtonComponent _visibilityLockButton;
         private readonly ButtonComponent _colorCheckBox;
+        private readonly ButtonComponent _textScaleMinusButton;
+        private readonly ButtonComponent _textScalePlusButton;
         private readonly ColorPickerComponent _colorPicker;
 
         private Rectangle _bounds;
@@ -88,6 +90,36 @@ namespace DeluxeJournal.Menus.Components
                 OnClick = (self, _) => _colorPicker.IsEnabled = Overlay.IsColorSelected = self.Toggle()
             };
 
+            _textScalePlusButton = new ButtonComponent(
+                new(_colorCheckBox.bounds.X - 64, bounds.Y + 34, 28, 32),
+                Game1.mouseCursors,
+                new(184, 345, 7, 8),
+                4f)
+            {
+                myID = myId + 8,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = SNAP_AUTOMATIC,
+                rightNeighborID = SNAP_AUTOMATIC,
+                SoundCueName = string.Empty,
+                OnClick = (_, _) => ChangeTextScale(1)
+            };
+
+            _textScaleMinusButton = new ButtonComponent(
+                new(_textScalePlusButton.bounds.X - (int)Game1.dialogueFont.MeasureString("100%").X - 44, bounds.Y + 34, 28, 32),
+                Game1.mouseCursors,
+                new(177, 345, 7, 8),
+                4f)
+            {
+                myID = myId + 7,
+                upNeighborID = SNAP_AUTOMATIC,
+                downNeighborID = SNAP_AUTOMATIC,
+                leftNeighborID = SNAP_AUTOMATIC,
+                rightNeighborID = SNAP_AUTOMATIC,
+                SoundCueName = string.Empty,
+                OnClick = (_, _) => ChangeTextScale(-1)
+            };
+
             _bounds.Height = _colorPicker.Bounds.Height + 40;
         }
 
@@ -95,6 +127,8 @@ namespace DeluxeJournal.Menus.Components
         {
             yield return _visibleCheckBox;
             yield return _visibilityLockButton;
+            yield return _textScaleMinusButton;
+            yield return _textScalePlusButton;
             yield return _colorCheckBox;
 
             foreach (var slider in _colorPicker.GetClickableComponents().Take(3))
@@ -117,6 +151,14 @@ namespace DeluxeJournal.Menus.Components
             else if (_visibilityLockButton.containsPoint(x, y))
             {
                 _visibilityLockButton.ReceiveLeftClick(x, y, playSound);
+            }
+            else if (_textScaleMinusButton.containsPoint(x, y))
+            {
+                _textScaleMinusButton.ReceiveLeftClick(x, y, playSound);
+            }
+            else if (_textScalePlusButton.containsPoint(x, y))
+            {
+                _textScalePlusButton.ReceiveLeftClick(x, y, playSound);
             }
             else if (_colorCheckBox.containsPoint(x, y))
             {
@@ -161,10 +203,28 @@ namespace DeluxeJournal.Menus.Components
             _visibleCheckBox.draw(b, Color.White, 0.86f, _visibleCheckBox.Selected ? 1 : 0);
             _visibilityLockButton.draw(b, Color.White, 0.86f, _visibilityLockButton.Selected ? 1 : 0);
             _colorCheckBox.draw(b, Color.White, 0.86f, _colorCheckBox.Selected ? 1 : 0);
+            _textScaleMinusButton.draw(b, Color.White * (Overlay.TextScale > IOverlay.MinTextScale ? 1f : 0.5f), 0.86f);
+            _textScalePlusButton.draw(b, Color.White * (Overlay.TextScale < IOverlay.MaxTextScale ? 1f : 0.5f), 0.86f);
+
+            string textScale = $"{(int)MathF.Round(Overlay.TextScale * 100f)}%";
+            float textScaleCenterX = (_textScaleMinusButton.bounds.Right + _textScalePlusButton.bounds.X) / 2f;
+            Utility.drawTextWithShadow(b, textScale, Game1.dialogueFont, new(textScaleCenterX - Game1.dialogueFont.MeasureString(textScale).X / 2f, _textScaleMinusButton.bounds.Y), Game1.textColor);
 
             if (Overlay.IsColorSelected || Overlay.IsColorOptional)
             {
                 _colorPicker.Draw(b);
+            }
+        }
+
+        /// <summary>Step the overlay text scale up or down by 10%.</summary>
+        private void ChangeTextScale(int direction)
+        {
+            float textScale = Math.Clamp((MathF.Round(Overlay.TextScale * 10f) + direction) / 10f, IOverlay.MinTextScale, IOverlay.MaxTextScale);
+
+            if (textScale != Overlay.TextScale)
+            {
+                Overlay.TextScale = textScale;
+                Game1.playSound("drumkit6");
             }
         }
     }

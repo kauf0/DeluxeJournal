@@ -14,6 +14,19 @@ namespace DeluxeJournal.Menus
 
         public override bool IsColorSelected => true;
 
+        public override float TextScale
+        {
+            get => base.TextScale;
+
+            set
+            {
+                base.TextScale = value;
+                WrapText();
+            }
+        }
+
+        private int Padding => (int)(8 * TextScale);
+
         public NotesOverlay(Rectangle bounds, string text) : base(bounds)
         {
             _fontTools = new(Game1.smallFont, string.Empty);
@@ -60,12 +73,15 @@ namespace DeluxeJournal.Menus
                 4f,
                 false);
 
+            BeginScaledText(b);
             Utility.drawTextWithColoredShadow(b,
                 _displayText,
                 _fontTools.Font,
-                new(EdgeSnappedBounds.X + 8, EdgeSnappedBounds.Y + 8),
+                new(EdgeSnappedBounds.X + Padding, EdgeSnappedBounds.Y + Padding),
                 CustomColor,
-                BackgroundColor);
+                BackgroundColor,
+                TextScale);
+            EndScaledText(b);
         }
 
         private void BuildDisplayText()
@@ -76,7 +92,7 @@ namespace DeluxeJournal.Menus
                 return;
             }
 
-            int maxLine = (Size.Y - 16) / _fontTools.LineSpacing;
+            int maxLine = (int)((Size.Y - Padding * 2) / (_fontTools.LineSpacing * TextScale));
             int currentLine = 0;
             int i;
 
@@ -93,7 +109,7 @@ namespace DeluxeJournal.Menus
 
         private void WrapText()
         {
-            _fontTools.Wrap(_text, Size.X - 16);
+            _fontTools.Wrap(_text, (Size.X - Padding * 2) / TextScale);
             BuildDisplayText();
         }
     }

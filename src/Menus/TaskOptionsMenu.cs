@@ -123,7 +123,16 @@ namespace DeluxeJournal.Menus
             _sharedContentBounds.Y = yPositionOnScreen + spaceToClearTopBorder + 16;
             _sharedContentBounds.Width = width - (_sharedContentBounds.X - xPositionOnScreen) * 2;
             _sharedContentBounds.Height = VerticalSpacing * 3 + 20;
-            _typeIconsWidth = (_sharedContentBounds.Width - LabelWidth) / 64 * 64;
+
+            int typeIconsX = _sharedContentBounds.X + LabelWidth + 12;
+
+            // Start the type icons in line with the selected color button, if the label leaves room, so they fit on one row.
+            if (Game1.dialogueFont.MeasureString(translation.Get("ui.tasks.options.type")).X < LabelWidth - 64)
+            {
+                typeIconsX -= 64;
+            }
+
+            _typeIconsWidth = (_sharedContentBounds.Right - typeIconsX + 8) / 64 * 64;
 
             typeIcons = new List<ClickableComponent>();
             _parameters = new List<ITaskParameterComponent>();
@@ -251,7 +260,7 @@ namespace DeluxeJournal.Menus
                     continue;
                 }
 
-                iconBounds.X = _sharedContentBounds.X + LabelWidth + 12 + (offset % _typeIconsWidth);
+                iconBounds.X = typeIconsX + (offset % _typeIconsWidth);
                 iconBounds.Y = _sharedContentBounds.Bottom + VerticalSpacing * (offset / _typeIconsWidth);
 
                 typeIcons.Add(new ClickableComponent(iconBounds, id)

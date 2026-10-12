@@ -15,6 +15,8 @@ namespace DeluxeJournal.Framework.Data
 
         public Color CustomColor { get; set; } = customColor;
 
+        public float TextScale { get; set; } = 1f;
+
         /// <summary>Apply these settings to an <see cref="IOverlay"/>.</summary>
         public void Apply(IOverlay overlay)
         {
@@ -23,6 +25,7 @@ namespace DeluxeJournal.Framework.Data
             overlay.IsVisibilityLocked = IsVisibilityLocked;
             overlay.IsColorSelected = IsColorSelected;
             overlay.CustomColor = CustomColor;
+            overlay.TextScale = Math.Clamp(TextScale, IOverlay.MinTextScale, IOverlay.MaxTextScale);
         }
 
         /// <summary>Update these settings using the active state of an <see cref="IOverlay"/>.</summary>
@@ -33,6 +36,7 @@ namespace DeluxeJournal.Framework.Data
             IsVisibilityLocked = overlay.IsVisibilityLocked;
             IsColorSelected = overlay.IsColorSelected;
             CustomColor = overlay.CustomColor;
+            TextScale = overlay.TextScale;
         }
 
         /// <summary>Create a new <see cref="OverlaySettings"/> instance with default values.</summary>

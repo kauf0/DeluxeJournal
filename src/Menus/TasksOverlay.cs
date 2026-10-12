@@ -38,9 +38,6 @@ namespace DeluxeJournal.Menus
             }
         }
 
-        private const int CheckBoxSpacing = 28;
-        private const int CollapseButtonSpacing = 24;
-
         private readonly IInputHelper _input;
         private readonly EventManager _events;
         private readonly TaskManager _taskManager;
@@ -53,7 +50,25 @@ namespace DeluxeJournal.Menus
 
         public override bool IsColorOptional => true;
 
-        private int LineSpacing { get; }
+        public override float TextScale
+        {
+            get => base.TextScale;
+
+            set
+            {
+                base.TextScale = value;
+                _capacity = Math.Max((Math.Min(Size.Y, EdgeSnappedBounds.Height) - 12) / LineSpacing, 1);
+                ReloadTasks();
+            }
+        }
+
+        private int LineSpacing => (int)(_fontTools.LineSpacing * 1.5f * TextScale);
+
+        private int CheckBoxSpacing => (int)(28 * TextScale);
+
+        private int CollapseButtonSpacing => (int)(24 * TextScale);
+
+        private int Padding => (int)(8 * TextScale);
 
         public TasksOverlay(Rectangle bounds, IInputHelper input) : base(bounds)
         {
@@ -71,7 +86,6 @@ namespace DeluxeJournal.Menus
             _events = events;
             _taskManager = taskManager;
             _fontTools = new(Game1.smallFont);
-            LineSpacing = (int)(_fontTools.LineSpacing * 1.5f);
             _capacity = (bounds.Height - 12) / LineSpacing;
             _tasks = new(_capacity);
 
@@ -100,7 +114,7 @@ namespace DeluxeJournal.Menus
             _tasks.Clear();
             _truncated = false;
             _contentBounds = EdgeSnappedBounds;
-            _contentBounds.Height = 16;
+            _contentBounds.Height = Padding * 2;
 
             for (int i = 0; i < count; i++)
             {
@@ -129,21 +143,21 @@ namespace DeluxeJournal.Menus
                     }
 
                     string status = PrecomputedTaskInfo.CreateStatusString(task);
-                    float xOffset = 16f + (task.IsHeader ? CollapseButtonSpacing : CheckBoxSpacing);
+                    float xOffset = Padding * 2 + (task.IsHeader ? CollapseButtonSpacing : CheckBoxSpacing);
 
                     if (!string.IsNullOrEmpty(status))
                     {
                         status = " " + status;
-                        xOffset += _fontTools.Font.MeasureString(status).X;
+                        xOffset += _fontTools.Font.MeasureString(status).X * TextScale;
                     }
 
-                    _truncated |= _fontTools.Truncate(task.Name, Size.X - xOffset, out string name);
-                    _tasks.Add(new(task, name + status, _fontTools.Font.MeasureString(name + status)));
+                    _truncated |= _fontTools.Truncate(task.Name, (Size.X - xOffset) / TextScale, out string name);
+                    _tasks.Add(new(task, name + status, _fontTools.Font.MeasureString(name + status) * TextScale));
                     _contentBounds.Height += LineSpacing;
                     hasGroupMembers = !task.IsHeader;
                     prevMaxNameWidth = maxNameWidth;
 
-                    if ((nameWidth = _fontTools.Font.MeasureString(name).X + xOffset) > maxNameWidth)
+                    if ((nameWidth = _fontTools.Font.MeasureString(name).X * TextScale + xOffset) > maxNameWidth)
                     {
                         maxNameWidth = nameWidth;
                     }
@@ -258,8 +272,10 @@ namespace DeluxeJournal.Menus
         private void DrawTaskNames(SpriteBatch b)
         {
             Vector2 mousePosition = new(Game1.getOldMouseX(), Game1.getOldMouseY());
-            Vector2 namePosition = new(_contentBounds.X + 8, _contentBounds.Y + 8);
-            float checkBoxOffsetY = Math.Max(_fontTools.LineSpacing - 22, 0);
+            Vector2 namePosition = new(_contentBounds.X + Padding, _contentBounds.Y + Padding);
+            float checkBoxOffsetY = Math.Max((int)((_fontTools.LineSpacing - 22) * TextScale), 0);
+
+            BeginScaledText(b);
 
             foreach (var taskInfo in _tasks)
             {
@@ -281,22 +297,22 @@ namespace DeluxeJournal.Menus
 
                 if (task.IsHeader)
                 {
-                    bool hovering = new Rectangle(namePosition.ToPoint(), new((int)taskInfo.Size.X + CollapseButtonSpacing + 8, (int)taskInfo.Size.Y)).Contains(mousePosition);
+                    bool hovering = new Rectangle(namePosition.ToPoint(), new((int)taskInfo.Size.X + CollapseButtonSpacing + Padding, (int)taskInfo.Size.Y)).Contains(mousePosition);
 
-                    b.DrawString(_fontTools.Font, name, new(namePosition.X - 2f, namePosition.Y + 3f), shadowColor);
-                    b.DrawString(_fontTools.Font, name, new(namePosition.X, namePosition.Y + 3f), shadowColor);
-                    Utility.drawBoldText(b, name, _fontTools.Font, namePosition, textColor);
+                    b.DrawString(_fontTools.Font, name, new(namePosition.X - 2f, namePosition.Y + 3f), shadowColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    b.DrawString(_fontTools.Font, name, new(namePosition.X, namePosition.Y + 3f), shadowColor, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+                    Utility.drawBoldText(b, name, _fontTools.Font, namePosition, textColor, TextScale);
 
                     if (task is HeaderTask header && ((IsContentInteractable && hovering) || header.IsCollapsed))
                     {
                         Utility.drawWithShadow(b,
                             DeluxeJournalMod.UiTexture,
-                            new Vector2(namePosition.X + taskInfo.Size.X + (CollapseButtonSpacing + 8f) / 2f, namePosition.Y + taskInfo.Size.Y / 2f),
+                            new Vector2(namePosition.X + taskInfo.Size.X + (CollapseButtonSpacing + Padding) / 2f, namePosition.Y + taskInfo.Size.Y / 2f),
                             new(40, 50, 8, 5),
                             textColor,
                             header.IsCollapsed ? (float)Math.PI * 0.5f : 0f,
                             new(4f, 2.5f),
-                            2f,
+                            2f * TextScale,
                             horizontalShadowOffset: -2,
                             verticalShadowOffset: 2,
                             shadowIntensity: BackgroundOpacity);
@@ -304,18 +320,18 @@ namespace DeluxeJournal.Menus
                 }
                 else
                 {
-                    Utility.drawTextWithColoredShadow(b, name, _fontTools.Font, new(namePosition.X + CheckBoxSpacing, namePosition.Y), textColor, shadowColor);
+                    Utility.drawTextWithColoredShadow(b, name, _fontTools.Font, new(namePosition.X + CheckBoxSpacing, namePosition.Y), textColor, shadowColor, TextScale);
 
-                    if (IsContentInteractable && new Rectangle((int)namePosition.X, (int)namePosition.Y, _contentBounds.Width - 16, LineSpacing).Contains(mousePosition))
+                    if (IsContentInteractable && new Rectangle((int)namePosition.X, (int)namePosition.Y, _contentBounds.Width - Padding * 2, LineSpacing).Contains(mousePosition))
                     {
                         Utility.drawWithShadow(b,
                             DeluxeJournalMod.UiTexture,
-                            new Vector2(namePosition.X + 2f, namePosition.Y + checkBoxOffsetY),
+                            new Vector2(namePosition.X + 2f * TextScale, namePosition.Y + checkBoxOffsetY),
                             new(39, 55, 9, 9),
                             textColor,
                             0f,
                             Vector2.Zero,
-                            2f,
+                            2f * TextScale,
                             horizontalShadowOffset: -2,
                             verticalShadowOffset: 2,
                             shadowIntensity: BackgroundOpacity);
@@ -323,12 +339,12 @@ namespace DeluxeJournal.Menus
                         if (mousePosition.X >= namePosition.X && mousePosition.X < namePosition.X + CheckBoxSpacing)
                         {
                             b.Draw(DeluxeJournalMod.UiTexture,
-                                new Vector2(namePosition.X + 12f, namePosition.Y + checkBoxOffsetY + 10f),
+                                new Vector2(namePosition.X + 12f * TextScale, namePosition.Y + checkBoxOffsetY + 10f * TextScale),
                                 new(26, 25, 7, 7),
                                 Color.White,
                                 0f,
                                 new(4f),
-                                2f + Game1.dialogueButtonScale * 0.05f,
+                                (2f + Game1.dialogueButtonScale * 0.05f) * TextScale,
                                 SpriteEffects.None,
                                 0.8f);
                         }
@@ -337,6 +353,8 @@ namespace DeluxeJournal.Menus
 
                 namePosition.Y += LineSpacing;
             }
+
+            EndScaledText(b);
         }
 
         protected override void CalculateEdgeSnappedBounds()
@@ -399,11 +417,11 @@ namespace DeluxeJournal.Menus
                     if (!string.IsNullOrEmpty(status))
                     {
                         status = " " + status;
-                        statusWidth = _fontTools.Font.MeasureString(status).X;
+                        statusWidth = _fontTools.Font.MeasureString(status).X * TextScale;
                     }
 
-                    _fontTools.Truncate(task.Name, Size.X - statusWidth - CheckBoxSpacing - 16f, out string name);
-                    _tasks[i] = new(task, name + status, _fontTools.Font.MeasureString(name + status));
+                    _fontTools.Truncate(task.Name, (Size.X - statusWidth - CheckBoxSpacing - Padding * 2) / TextScale, out string name);
+                    _tasks[i] = new(task, name + status, _fontTools.Font.MeasureString(name + status) * TextScale);
                     return;
                 }
             }
@@ -415,15 +433,15 @@ namespace DeluxeJournal.Menus
 
             if (IsContentInteractable && e.Button == SButton.MouseLeft && _contentBounds.Contains(mousePosition))
             {
-                int taskIndex = Math.Max(mousePosition.Y - _contentBounds.Y - 8, 0) / LineSpacing;
+                int taskIndex = Math.Max(mousePosition.Y - _contentBounds.Y - Padding, 0) / LineSpacing;
 
                 if (taskIndex < _tasks.Count)
                 {
                     ITask task = _tasks[taskIndex].Task;
-                    Point taskPosition = new(_contentBounds.X + 8, _contentBounds.Y + taskIndex * LineSpacing + 8);
+                    Point taskPosition = new(_contentBounds.X + Padding, _contentBounds.Y + taskIndex * LineSpacing + Padding);
                     int taskWidth = (int)_tasks[taskIndex].Size.X;
 
-                    if (task is HeaderTask header && new Rectangle(taskPosition.X + taskWidth + 8, taskPosition.Y, CollapseButtonSpacing, LineSpacing).Contains(mousePosition))
+                    if (task is HeaderTask header && new Rectangle(taskPosition.X + taskWidth + Padding, taskPosition.Y, CollapseButtonSpacing, LineSpacing).Contains(mousePosition))
                     {
                         header.IsCollapsed = !header.IsCollapsed;
                         ReloadTasks();

@@ -16,6 +16,12 @@ namespace DeluxeJournal.Menus
         /// <summary>Minumum resize height.</summary>
         public const int MinHeight = 100;
 
+        /// <summary>Minimum text scale.</summary>
+        public const float MinTextScale = 0.6f;
+
+        /// <summary>Maximum text scale.</summary>
+        public const float MaxTextScale = 1f;
+
         /// <summary>Size of the resize boxes shown in edit-mode.</summary>
         public const int ResizeBoxSize = 16;
 
@@ -95,6 +101,9 @@ namespace DeluxeJournal.Menus
         /// <summary>Custom color selected by the player.</summary>
         public Color CustomColor { get; set; }
 
+        /// <summary>Scale of the overlay text relative to the default font size.</summary>
+        public virtual float TextScale { get; set; } = 1f;
+
         /// <summary>Distance from the screen edge to start snapping.</summary>
         public int SnapDistance { get; set; } = 4;
 
@@ -171,6 +180,26 @@ namespace DeluxeJournal.Menus
 
         /// <summary>Draw the overlay contents.</summary>
         public abstract void DrawContents(SpriteBatch b);
+
+        /// <summary>Switch to linear filtering for scaled text, since point sampling skips pixel columns of the font.</summary>
+        protected void BeginScaledText(SpriteBatch b)
+        {
+            if (TextScale != 1f)
+            {
+                b.End();
+                b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp);
+            }
+        }
+
+        /// <summary>Restore the point sampler after <see cref="BeginScaledText"/>.</summary>
+        protected void EndScaledText(SpriteBatch b)
+        {
+            if (TextScale != 1f)
+            {
+                b.End();
+                b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+            }
+        }
 
         /// <inheritdoc/>
         public void Dispose()

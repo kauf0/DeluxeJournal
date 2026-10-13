@@ -34,6 +34,27 @@ namespace DeluxeJournal
         /// <summary>Default color schema data file path.</summary>
         public const string ColorDataDefault = $"{ColorDataPath}/default.json";
 
+        /// <summary>UI sprite sheet asset name.</summary>
+        public const string UiTextureAsset = "Mods/MolsonCAD.DeluxeJournal/UI";
+
+        /// <summary>Animal icon sprite sheet asset name.</summary>
+        public const string AnimalIconsTextureAsset = "Mods/MolsonCAD.DeluxeJournal/AnimalIcons";
+
+        /// <summary>Building icon sprite sheet asset name.</summary>
+        public const string BuildingIconsTextureAsset = "Mods/MolsonCAD.DeluxeJournal/BuildingIcons";
+
+        /// <summary>Colored task mask asset name.</summary>
+        public const string ColoredTaskMaskAsset = "Mods/MolsonCAD.DeluxeJournal/ColoredTaskMask";
+
+        /// <summary>Texture asset names mapped to the mod files they are loaded from.</summary>
+        private static readonly Dictionary<string, string> TextureAssetFiles = new()
+        {
+            { UiTextureAsset, "assets/ui.png" },
+            { AnimalIconsTextureAsset, "assets/animal-icons.png" },
+            { BuildingIconsTextureAsset, "assets/building-icons.png" },
+            { ColoredTaskMaskAsset, "assets/colored-task-mask.png" }
+        };
+
         /// <summary>UI spirte sheet texture.</summary>
         public static Texture2D? UiTexture { get; private set; }
 
@@ -80,10 +101,6 @@ namespace DeluxeJournal
 
             RuntimeHelpers.RunClassConstructor(typeof(TaskTypes).TypeHandle);
 
-            UiTexture = helper.ModContent.Load<Texture2D>("assets/ui.png");
-            AnimalIconsTexture = helper.ModContent.Load<Texture2D>("assets/animal-icons.png");
-            BuildingIconsTexture = helper.ModContent.Load<Texture2D>("assets/building-icons.png");
-            ColoredTaskMask = helper.ModContent.Load<Texture2D>("assets/colored-task-mask.png");
             SmartIconComponent.AnimalIconIds = helper.ModContent.Load<Dictionary<string, int>>("assets/data/animal-icons.json");
             SmartIconComponent.BuildingIconData = helper.ModContent.Load<Dictionary<string, BuildingIconData>>("assets/data/building-icons.json");
 
@@ -96,11 +113,12 @@ namespace DeluxeJournal
 
             new QuestJournalIntegration(helper, Monitor, ModManifest.UniqueID).Register();
 
-            PageRegistry.Register("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture, helper.Translation), null, 999);
-            PageRegistry.Register("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture, helper.Translation), (bounds) => new TasksOverlay(bounds, helper.Input), 998);
-            PageRegistry.Register("notes", (bounds) => new NotesPage("notes", bounds, UiTexture, helper.Translation, GetNotes()), (bounds) => new NotesOverlay(bounds, GetNotes()), 997);
-            PageRegistry.Register("overlays", (bounds) => new OverlaysPage("overlays", bounds, UiTexture, helper.Translation), null, 996);
+            PageRegistry.Register("quests", (bounds) => new QuestLogPage("quests", bounds, UiTexture!, helper.Translation), null, 999);
+            PageRegistry.Register("tasks", (bounds) => new TasksPage("tasks", bounds, UiTexture!, helper.Translation), (bounds) => new TasksOverlay(bounds, helper.Input), 998);
+            PageRegistry.Register("notes", (bounds) => new NotesPage("notes", bounds, UiTexture!, helper.Translation, GetNotes()), (bounds) => new NotesOverlay(bounds, GetNotes()), 997);
+            PageRegistry.Register("overlays", (bounds) => new OverlaysPage("overlays", bounds, UiTexture!, helper.Translation), null, 996);
 
+            helper.Events.Content.AssetRequested += OnAssetRequested;
             helper.Events.Display.MenuChanged += OnMenuChanged;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -228,6 +246,20 @@ namespace DeluxeJournal
             Helper.Data.WriteJsonFile(relativePath ?? ColorDataDefault, new ColorData(ColorSchemas.Skip(1).ToList()));
         }
 
+        private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+        {
+            // Only the unlocalized names: localized requests fall back to them, so the loaded textures
+            // stay the same instances when the game language changes.
+            foreach ((string assetName, string filePath) in TextureAssetFiles)
+            {
+                if (e.Name.IsEquivalentTo(assetName))
+                {
+                    e.LoadFromModFile<Texture2D>(filePath, AssetLoadPriority.Low);
+                    return;
+                }
+            }
+        }
+
         [EventPriority(EventPriority.Low)]
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
         {
@@ -242,6 +274,13 @@ namespace DeluxeJournal
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
+            // Loaded through the game content pipeline so recolor mods can edit them. SMAPI reloads
+            // invalidated textures in place, so the references held here and by components stay current.
+            UiTexture = Helper.GameContent.Load<Texture2D>(UiTextureAsset);
+            AnimalIconsTexture = Helper.GameContent.Load<Texture2D>(AnimalIconsTextureAsset);
+            BuildingIconsTexture = Helper.GameContent.Load<Texture2D>(BuildingIconsTextureAsset);
+            ColoredTaskMask = Helper.GameContent.Load<Texture2D>(ColoredTaskMaskAsset);
+
             if (Context.IsMainPlayer)
             {
                 LoadColorSchemas(string.IsNullOrEmpty(Config?.TargetColorSchemaFile) ? null : $"{ColorDataPath}/{Config.TargetColorSchemaFile}");

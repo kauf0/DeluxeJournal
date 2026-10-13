@@ -11,6 +11,7 @@ auto-completion and renewal conditions, or jot down what you need on the notes p
    * [Notes Page](#notes-page)
    * [Overlays Page](#overlays-page)
 4. [Configuration](#configuration)
+5. [Recolor Mods](#recolor-mods)
 
 ## Install
 - Install [the latest version of SMAPI](https://smapi.io)
@@ -82,3 +83,27 @@ After this mod is run for the first time, a `config.json` file is created in the
 | `ToggleOverlaysKeybind` | `"O"` | Keybind for toggling the visibility of overlays. *Set via the Overlays Page.* |
 | `OverlayBackgroundColor` | `"00000040"` | Overlay background color hex code (alpha normalized RGB values for blending). *Set via the Overlays Page.* |
 | `TargetColorSchemaFile` | `""` | The name of the color schema file to load from `assets/data/colors/`. Uses the default loading rules if empty. Example, set to `"custom.json"` to load a custom color data file at the path `DeluxeJournal/assets/data/colors/custom.json`. |
+
+## Recolor Mods
+The textures used by this mod are loaded through the game's content pipeline, so they can be edited with [Content Patcher](https://www.nexusmods.com/stardewvalley/mods/1915) (or any other content mod) under the following asset names:
+| Asset Name | Default File |
+| ---------- | ------------ |
+| `Mods/MolsonCAD.DeluxeJournal/UI` | `assets/ui.png` |
+| `Mods/MolsonCAD.DeluxeJournal/AnimalIcons` | `assets/animal-icons.png` |
+| `Mods/MolsonCAD.DeluxeJournal/BuildingIcons` | `assets/building-icons.png` |
+| `Mods/MolsonCAD.DeluxeJournal/ColoredTaskMask` | `assets/colored-task-mask.png` |
+
+For example, a Content Patcher pack that recolors the UI sprite sheet:
+```json
+{
+  "Format": "2.9.0",
+  "Changes": [
+    {
+      "Action": "EditImage",
+      "Target": "Mods/MolsonCAD.DeluxeJournal/UI",
+      "FromFile": "assets/ui.png"
+    }
+  ]
+}
+```
+Edits must keep the sprite layout of the original files. Recolors that replace the files in the `assets/` folder directly still work as before.

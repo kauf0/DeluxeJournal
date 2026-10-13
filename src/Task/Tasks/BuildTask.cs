@@ -90,7 +90,7 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
-            if (CanUpdate() && Game1.player.daysUntilHouseUpgrade.Value >= 3)
+            if (CanUpdate() && IsTaskOwner(Game1.player) && Game1.player.daysUntilHouseUpgrade.Value >= 3)
             {
                 MarkAsCompleted();
             }

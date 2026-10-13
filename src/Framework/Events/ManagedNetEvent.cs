@@ -41,6 +41,12 @@ namespace DeluxeJournal.Framework.Events
 
         public void RaiseFromMessage(object? invoker, ModMessageReceivedEventArgs args)
         {
+            // Split-screen players share this event, which the sender already raised if it is on this computer
+            if (Context.ScreenId != 0 || Multiplayer.GetConnectedPlayer(args.FromPlayerID)?.IsSplitScreen == true)
+            {
+                return;
+            }
+
             if (args.Type == EventName && args.ReadAs<TMessage>() is TMessage message)
             {
                 Raise(invoker, MessageToEventArgs(message));

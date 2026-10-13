@@ -115,7 +115,11 @@ namespace DeluxeJournal.Framework.Task
 
                     if (!_tasks.ContainsKey(umid))
                     {
-                        _tasks[umid] = new(umid, _taskEvents, _eventManager.TaskListChanged);
+                        // Farmhand tasks only receive events once the farmhand plays on this computer
+                        _tasks[umid] = new(umid, _taskEvents, _eventManager.TaskListChanged)
+                        {
+                            IsSubscribed = umid == Game1.player.UniqueMultiplayerID
+                        };
                     }
 
                     foreach (ITask task in Data.Tasks[saveFolderName][key])
@@ -172,6 +176,7 @@ namespace DeluxeJournal.Framework.Task
             }
 
             taskList.Clear();
+            taskList.IsSubscribed = umid == Game1.player.UniqueMultiplayerID;
 
             foreach (ITask task in tasks)
             {
@@ -275,6 +280,11 @@ namespace DeluxeJournal.Framework.Task
                 // Farmhand tasks are saved by the host, so they are requested on join and sent back when changed
                 ClearTasks();
                 _multiplayer.SendMessage(string.Empty, RequestTasksMessage, new[] { _multiplayer.ModID }, new[] { Game1.MasterPlayer.UniqueMultiplayerID });
+            }
+            else
+            {
+                // The host loaded this split-screen farmhand's tasks without subscribing them
+                ((EventManagedTaskList)Tasks).IsSubscribed = true;
             }
         }
 

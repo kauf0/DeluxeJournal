@@ -150,7 +150,7 @@ namespace DeluxeJournal.Task.Tasks
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
-            if (CanUpdate())
+            if (CanUpdate() && IsTaskOwner(Game1.player))
             {
                 int trashCanLevel = Game1.player.trashCanLevel;
 

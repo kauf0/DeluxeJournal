@@ -114,7 +114,8 @@ namespace DeluxeJournal.Framework.Events
 
         private void OnBuildingListChanged(object? sender, BuildingListChangedEventArgs e)
         {
-            if (Context.IsMainPlayer)
+            // Each computer sees new buildings in the synced building list; split-screen players share this event
+            if (Context.ScreenId == 0)
             {
                 foreach (Building building in e.Added)
                 {

@@ -11,6 +11,7 @@ namespace DeluxeJournal.Framework.Task
         private readonly ITaskEvents _events;
         private readonly List<ITask> _tasks;
         private readonly long _umid;
+        private bool _subscribed;
 
         public ITask this[int index]
         {
@@ -23,7 +24,12 @@ namespace DeluxeJournal.Framework.Task
                 if (old != value)
                 {
                     old.EventUnsubscribe(_events);
-                    value.EventSubscribe(_events);
+
+                    if (_subscribed)
+                    {
+                        value.EventSubscribe(_events);
+                    }
+
                     _tasks[index] = value;
 
                     if (TaskListChangedEvent.HasEventListeners)
@@ -41,17 +47,51 @@ namespace DeluxeJournal.Framework.Task
         /// <summary>Managed event raised after this <see cref="IList{ITask}"/> is changed.</summary>
         public IManagedEvent<TaskListChangedArgs> TaskListChangedEvent { get; }
 
+        /// <summary>
+        /// Whether the tasks receive task events. Disabled for a player on another computer, whose tasks are only
+        /// stored here and updated by that player's game.
+        /// </summary>
+        public bool IsSubscribed
+        {
+            get => _subscribed;
+
+            set
+            {
+                if (_subscribed != value)
+                {
+                    foreach (ITask task in _tasks)
+                    {
+                        if (value)
+                        {
+                            task.EventSubscribe(_events);
+                        }
+                        else
+                        {
+                            task.EventUnsubscribe(_events);
+                        }
+                    }
+
+                    _subscribed = value;
+                }
+            }
+        }
+
         public EventManagedTaskList(long umid, ITaskEvents events, IManagedEvent<TaskListChangedArgs> taskListChangedEvent)
         {
             _umid = umid;
             _events = events;
             _tasks = [];
+            _subscribed = true;
             TaskListChangedEvent = taskListChangedEvent;
         }
 
         public void Add(ITask task)
         {
-            task.EventSubscribe(_events);
+            if (_subscribed)
+            {
+                task.EventSubscribe(_events);
+            }
+
             _tasks.Add(task);
 
             if (TaskListChangedEvent.HasEventListeners)
@@ -93,7 +133,11 @@ namespace DeluxeJournal.Framework.Task
 
         public void Insert(int index, ITask task)
         {
-            task.EventSubscribe(_events);
+            if (_subscribed)
+            {
+                task.EventSubscribe(_events);
+            }
+
             _tasks.Insert(index, task);
 
             if (TaskListChangedEvent.HasEventListeners)

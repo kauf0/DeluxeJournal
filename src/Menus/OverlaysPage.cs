@@ -511,6 +511,11 @@ namespace DeluxeJournal.Menus
                             Game1.playSound("Cowboy_gunshot");
                         }
                     }
+
+                    if (overlayComponent.TextScaleContainsPoint(x, y))
+                    {
+                        HoverText = _translation.Get("ui.overlays.textsize");
+                    }
                 }
 
                 if (Game1.options.SnappyMenus && currentlySnappedComponent is ColorSliderBar slider && slider.IsEnabled && !Game1.oldPadState.IsButtonDown(Buttons.A))

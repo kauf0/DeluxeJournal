@@ -77,6 +77,7 @@
 	// overlays page
 	"ui.overlays.backgroundcolor": "Background Color",
 	"ui.overlays.hotkey": "Hotkey: {{keybind}}",
+	"ui.overlays.textsize": "Text Size",
 
 	// quest journal integration
 	"questjournal.banner": "Deluxe Journal Task",

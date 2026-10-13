@@ -185,6 +185,11 @@ namespace DeluxeJournal.Menus.Components
             return _hovering = Bounds.Contains(x, y);
         }
 
+        public bool TextScaleContainsPoint(int x, int y)
+        {
+            return Rectangle.Union(_textScaleMinusButton.bounds, _textScalePlusButton.bounds).Contains(x, y);
+        }
+
         public void Draw(SpriteBatch b)
         {
             IClickableMenu.drawTextureBox(b,

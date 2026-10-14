@@ -314,7 +314,7 @@ namespace DeluxeJournal.Menus
 
         public override void update(GameTime time)
         {
-            _totalTimeSeconds = time.TotalGameTime.Seconds;
+            _totalTimeSeconds = (int)time.TotalGameTime.TotalSeconds;
             _textBox.Update(time);
 
             if (_dirty && _saveTimeSeconds < _totalTimeSeconds)

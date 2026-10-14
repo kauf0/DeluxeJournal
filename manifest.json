@@ -5,7 +5,7 @@
 	"Description": "Community fork. Upgrades the journal with new features.",
 	"UniqueID": "MolsonCAD.DeluxeJournal",
 	"EntryDll": "DeluxeJournal.dll",
-	"MinimumApiVersion": "4.0.0",
+	"MinimumApiVersion": "4.1.0",
 	"MinimumGameVersion": "1.6.9",
 	"UpdateKeys": [
 		"Nexus:43805"

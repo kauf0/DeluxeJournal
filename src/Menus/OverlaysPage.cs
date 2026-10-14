@@ -437,9 +437,14 @@ namespace DeluxeJournal.Menus
             }
             else
             {
-                dragPoint.Overlay.Position = new(
+                Point position = new(
                     Math.Max(Math.Min(dragPoint.BoundsSnapshot.X - dragPoint.Position.X + x, Game1.uiViewport.Width - dragPoint.BoundsSnapshot.Width), 0),
                     Math.Max(Math.Min(dragPoint.BoundsSnapshot.Y - dragPoint.Position.Y + y, Game1.uiViewport.Height - dragPoint.BoundsSnapshot.Height), 0));
+
+                if (position != dragPoint.Overlay.Position)
+                {
+                    dragPoint.Overlay.Position = position;
+                }
             }
         }
 

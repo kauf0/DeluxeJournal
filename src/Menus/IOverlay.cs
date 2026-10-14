@@ -44,7 +44,8 @@ namespace DeluxeJournal.Menus
         /// <summary>Background color opacity value between <c>0f</c> and <c>1f</c>.</summary>
         public static float BackgroundOpacity => BackgroundColor.A / 255f;
 
-        private Point _oldWindowSize;
+        private Rectangle _preferredBounds;
+        private Point _preferredWindowSize;
         private int _width;
         private int _height;
 
@@ -63,21 +64,38 @@ namespace DeluxeJournal.Menus
             {
                 Resize(value.Width, value.Height);
                 Move(value.X, value.Y);
+                KeepBounds(Bounds);
             }
         }
+
+        /// <summary>Bounds chosen by the player, relative to the <see cref="PreferredWindowSize"/>.</summary>
+        public Rectangle PreferredBounds => _preferredBounds;
+
+        /// <summary>Window size the <see cref="PreferredBounds"/> were chosen in.</summary>
+        public Point PreferredWindowSize => _preferredWindowSize;
 
         /// <summary>On-screen coordinates of this overlay.</summary>
         public new Point Position
         {
             get => new(xPositionOnScreen, yPositionOnScreen);
-            set => Move(value.X, value.Y);
+
+            set
+            {
+                Move(value.X, value.Y);
+                KeepBounds(Bounds);
+            }
         }
 
         /// <summary>Size of this overlay.</summary>
         public Point Size
         {
             get => new(_width, _height);
-            set => Resize(value.X, value.Y);
+
+            set
+            {
+                Resize(value.X, value.Y);
+                KeepBounds(Bounds);
+            }
         }
 
         /// <summary>Whether the overlay content should be interactable.</summary>
@@ -123,15 +141,16 @@ namespace DeluxeJournal.Menus
         {
             _width = width;
             _height = height;
+            _preferredBounds = new(x, y, width, height);
 
             if (Game1.uiMode)
             {
-                _oldWindowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+                _preferredWindowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
             }
             else
             {
                 float uiMultiplier = Game1.options.zoomLevel / Game1.options.uiScale;
-                _oldWindowSize = new((int)(Game1.viewport.Width * uiMultiplier), (int)(Game1.viewport.Height * uiMultiplier));
+                _preferredWindowSize = new((int)(Game1.viewport.Width * uiMultiplier), (int)(Game1.viewport.Height * uiMultiplier));
             }
 
             ScreenId = Context.ScreenId;
@@ -153,15 +172,19 @@ namespace DeluxeJournal.Menus
             CalculateEdgeSnappedBounds();
         }
 
+        /// <summary>Set the bounds chosen by the player and fit them to the current window.</summary>
+        /// <param name="bounds">Preferred bounds.</param>
+        /// <param name="windowSize">Window size the bounds were chosen in, or <see cref="Point.Zero"/> for the current window size.</param>
+        public void SetPreferredBounds(Rectangle bounds, Point windowSize)
+        {
+            _preferredBounds = bounds;
+            _preferredWindowSize = windowSize == Point.Zero ? new(Game1.uiViewport.Width, Game1.uiViewport.Height) : windowSize;
+            FitToWindow();
+        }
+
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
-            Point windowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
-            int x = (int)((windowSize.X - _width) * (xPositionOnScreen / (float)(_oldWindowSize.X - _width)));
-            int y = (int)((windowSize.Y - _height) * (yPositionOnScreen / (float)(_oldWindowSize.Y - _height)));
-            _oldWindowSize = windowSize;
-
-            Resize(_width, _height);
-            Move(x, y);
+            FitToWindow();
         }
 
         public override void draw(SpriteBatch b)
@@ -212,6 +235,42 @@ namespace DeluxeJournal.Menus
         /// <inheritdoc cref="IDisposable.Dispose"/>
         protected virtual void Dispose(bool disposing)
         {
+        }
+
+        /// <summary>Keep the bounds set by the player as the preferred bounds for the current window size.</summary>
+        private void KeepBounds(Rectangle bounds)
+        {
+            _preferredBounds = bounds;
+            _preferredWindowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+        }
+
+        /// <summary>
+        /// Place the overlay at the same relative position between the screen edges as its preferred bounds, clamped to the window.
+        /// The preferred bounds are left unchanged, so the overlay goes back to them when the window grows again.
+        /// </summary>
+        private void FitToWindow()
+        {
+            Point windowSize = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+            Rectangle bounds = _preferredBounds;
+
+            if (FitsWindow(_preferredBounds, _preferredWindowSize))
+            {
+                bounds.Width = Math.Min(bounds.Width, windowSize.X - ResizeBoxSize);
+                bounds.Height = Math.Min(bounds.Height, windowSize.Y - ResizeBoxSize);
+                bounds.X = (windowSize.X - bounds.Width) * _preferredBounds.X / (_preferredWindowSize.X - _preferredBounds.Width);
+                bounds.Y = (windowSize.Y - bounds.Height) * _preferredBounds.Y / (_preferredWindowSize.Y - _preferredBounds.Height);
+            }
+
+            Resize(bounds.Width, bounds.Height);
+            Move(bounds.X, bounds.Y);
+        }
+
+        /// <summary>Whether the bounds fit within a window of the given size without being clamped.</summary>
+        private static bool FitsWindow(Rectangle bounds, Point windowSize)
+        {
+            return bounds.X >= 0 && bounds.Y >= 0
+                && bounds.Width <= windowSize.X - ResizeBoxSize && bounds.Height <= windowSize.Y - ResizeBoxSize
+                && bounds.Right <= windowSize.X && bounds.Bottom <= windowSize.Y;
         }
 
         /// <summary>Get the overlay bounds snapped to the screen edge.</summary>

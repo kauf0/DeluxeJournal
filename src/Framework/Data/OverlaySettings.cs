@@ -7,6 +7,8 @@ namespace DeluxeJournal.Framework.Data
     {
         public Rectangle Bounds { get; set; } = bounds;
 
+        public Point WindowSize { get; set; }
+
         public bool IsVisible { get; set; } = isVisible;
 
         public bool IsVisibilityLocked { get; set; } = isVisibilityLocked;
@@ -20,7 +22,7 @@ namespace DeluxeJournal.Framework.Data
         /// <summary>Apply these settings to an <see cref="IOverlay"/>.</summary>
         public void Apply(IOverlay overlay)
         {
-            overlay.Bounds = Bounds;
+            overlay.SetPreferredBounds(Bounds, WindowSize);
             overlay.IsVisible = IsVisible;
             overlay.IsVisibilityLocked = IsVisibilityLocked;
             overlay.IsColorSelected = IsColorSelected;
@@ -31,7 +33,8 @@ namespace DeluxeJournal.Framework.Data
         /// <summary>Update these settings using the active state of an <see cref="IOverlay"/>.</summary>
         public void Update(IOverlay overlay)
         {
-            Bounds = overlay.Bounds;
+            Bounds = overlay.PreferredBounds;
+            WindowSize = overlay.PreferredWindowSize;
             IsVisible = overlay.IsVisible;
             IsVisibilityLocked = overlay.IsVisibilityLocked;
             IsColorSelected = overlay.IsColorSelected;

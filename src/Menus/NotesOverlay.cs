@@ -62,6 +62,16 @@ namespace DeluxeJournal.Menus
 
         public override void DrawContents(SpriteBatch b)
         {
+            if (string.IsNullOrWhiteSpace(_displayText))
+            {
+                return;
+            }
+
+            DrawInEditMode(b);
+        }
+
+        public override void DrawInEditMode(SpriteBatch b)
+        {
             drawTextureBox(b,
                 DeluxeJournalMod.UiTexture,
                 BackgroundSource,

@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Deluxe Journal",
 	"Author": "kauf0",
-	"Version": "1.4.1",
+	"Version": "1.5.0",
 	"Description": "Community fork. Upgrades the journal with new features.",
 	"UniqueID": "MolsonCAD.DeluxeJournal",
 	"EntryDll": "DeluxeJournal.dll",

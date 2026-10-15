@@ -1,0 +1,80 @@
+name: Upload to Nexus Mods
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TAG }}
+
+      # The mod is built locally and attached to the release.
+      - name: Download release zip
+        id: zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$TAG" --pattern '*.zip' --dir release
+          files=(release/*.zip)
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Expected one zip in release $TAG, found ${#files[@]}"
+            exit 1
+          fi
+          echo "file=${files[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Build changelog
+        id: changelog
+        shell: python
+        run: |
+          import os, re, sys
+
+          tag = os.environ["TAG"]
+          with open("CHANGELOG.md", encoding="utf-8-sig") as f:
+              lines = f.read().splitlines()
+          if f"## {tag}" not in lines:
+              sys.exit(f"CHANGELOG.md has no '## {tag}' section")
+
+          group = ""
+          entries = []
+          for line in lines[lines.index(f"## {tag}") + 1:]:
+              if line.startswith("## "):
+                  break
+              if line.startswith("### "):
+                  group = line[4:].strip()
+              elif line.startswith("- "):
+                  text = line[2:].replace("**", "")
+                  text = re.sub(r"@([\w-]+)", r"\1", text)
+                  text = re.sub(r" in #\d+", "", text)
+                  entries.append(f"{group}: {text}")
+          if not entries:
+              sys.exit(f"The '## {tag}' section of CHANGELOG.md has no entries")
+
+          print("\n".join(entries))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("text<<CHANGELOG_END\n" + "\n".join(entries) + "\nCHANGELOG_END\n")
+
+      - uses: Nexus-Mods/upload-action@98532f7670c27cbecc78fae03fa3e278147827e2 # v1.0.0-beta.11
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUS_FILE_ID }}
+          mod_id: ${{ vars.NEXUS_MOD_ID }}
+          filename: ${{ steps.zip.outputs.file }}
+          version: ${{ env.TAG }}
+          display_name: Deluxe Journal Continued
+          changelog: ${{ steps.changelog.outputs.text }}
+          archive_existing_version: true
+          update_mod_version: true

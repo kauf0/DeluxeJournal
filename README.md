@@ -15,13 +15,13 @@ auto-completion and renewal conditions, or jot down what you need on the notes p
 
 ## Install
 - Install [the latest version of SMAPI](https://smapi.io)
-- Install [this mod from Nexus mods](https://www.nexusmods.com/stardewvalley/mods/11436)
+- Install [this mod from Nexus mods](https://www.nexusmods.com/stardewvalley/mods/43805)
 - Unzip into the `StardewValley/Mods` folder
 - Run the game using SMAPI
 
 ## Requirements
-- Stardew Valley 1.6
-- SMAPI version 4.0.0 or newer
+- Stardew Valley 1.6.9 or newer
+- SMAPI version 4.1.0 or newer
 
 ## Features
 
